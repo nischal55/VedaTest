@@ -69,7 +69,11 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                         <li><a class="dropdown-item" href="{{route('expenses.create')}}">Add Expenses</a></li>
-                        <li><a class="dropdown-item" href="{{route('expenses.index')}}">View Category</a></li>
+                        <li><a class="dropdown-item" href="{{route('expenses.index')}}">View Expenses</a></li>
+                        <li><a class="dropdown-item" href="{{route('expenses.groupby')}}">GroupByExpenses</a></li>
+                        <li><a class="dropdown-item" href="{{route('expenses.groupbymonth')}}">GroupByMonths</a></li>
+
+
                     </ul>
                 </li>
             </ul>

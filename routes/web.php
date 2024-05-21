@@ -29,6 +29,10 @@ Route::middleware('auth')->group(function(){
         Route::resource('categories', CategoryExpensesController::class);
         Route::resource('expenses', ExpenseController::class);
         Route::post('/expenses/date', [ExpenseController::class, 'filterDate'])->name('expenses.fileterDate');
+        Route::get('/groupByexpenses', [ExpenseController::class, 'groupByFilter'])->name('expenses.groupby');
+        Route::post('/expenses/groupby/date', [ExpenseController::class, 'fileterDateGroupBy'])->name('expenses.fileterDateGroupBy');
+        Route::get('/groupBydate', [ExpenseController::class, 'groupByMonth'])->name('expenses.groupbymonth');
+
 });
 
 Route::get('/dashboard', function () {

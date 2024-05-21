@@ -16,8 +16,8 @@ class ExpenseController extends Controller
     {
         $expenses = Expense::all();
         $totalPrice = $expenses->sum('price');
-        
-        return view('expenses/index',compact('expenses','totalPrice'));
+
+        return view('expenses/index', compact('expenses', 'totalPrice'));
     }
 
     /**
@@ -25,8 +25,8 @@ class ExpenseController extends Controller
      */
     public function create()
     {
-        $categories =CategoryExpenses::all();
-        return view('expenses/add',compact('categories'));
+        $categories = CategoryExpenses::all();
+        return view('expenses/add', compact('categories'));
     }
 
     /**
@@ -41,12 +41,12 @@ class ExpenseController extends Controller
         ]);
         $expenses = new Expense;
         $expenses->category_id = $request->input('category_id');
-        $expenses->item_name =$request->input('item_name');
+        $expenses->item_name = $request->input('item_name');
         $expenses->price = $request->input('price');
         $expenses->save();
         $notification = array(
-           'message' => 'Expense added successfully',
-            'alert-type' =>'success'
+            'message' => 'Expense added successfully',
+            'alert-type' => 'success'
         );
         return redirect()->route('expenses.index')->with($notification);
         // return back()->with($notification);
@@ -66,20 +66,67 @@ class ExpenseController extends Controller
             'startDate' => 'required|date',
             'endDate' => 'required|date|after_or_equal:startDate',
         ]);
-    
+
         $startDate = $request->input('startDate');
         $endDate = $request->input('endDate');
-        
+
         // Retrieve events within the date range, including the boundaries
         $expenses = Expense::whereDate('created_at', '>=', $startDate)
-        ->whereDate('created_at', '<=', $endDate)
-        ->get();    
+            ->whereDate('created_at', '<=', $endDate)
+            ->get();
         $totalPrice = $expenses->sum('price');
 
         // Pass the filtered expenses to the view
-        return view('expenses.index', compact('expenses','totalPrice'));
+        return view('expenses.index', compact('expenses', 'totalPrice'));
     }
-    
+    public function groupByFilter()
+    {
+        $expenses = Expense::with('category')
+            ->selectRaw('category_id, SUM(price) as total_price, COUNT(*) as count')
+            ->groupBy('category_id')
+            ->get();
+        foreach ($expenses as &$expense) {
+            $expense->category_name = $expense->category->name;
+        }
+        // dd($expenses);
+        // Calculate the overall total price
+        $totalPrice = $expenses->sum('total_price');
+
+        return view('expenses.groupby', compact('expenses', 'totalPrice'));
+    }
+    public function fileterDateGroupBy(Request $request)
+    {
+        $request->validate([
+            'startDate' => 'required|date',
+            'endDate' => 'required|date|after_or_equal:startDate',
+        ]);
+
+        $startDate = $request->input('startDate');
+        $endDate = $request->input('endDate');
+
+        $expenses = Expense::with('category')
+            ->selectRaw('category_id, SUM(price) as total_price, COUNT(*) as count')
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->groupBy('category_id')
+            ->get();
+
+        foreach ($expenses as $expense) {
+            $expense->category_name = $expense->category->name;
+        }
+
+        return view('expenses.groupby', compact('expenses', 'startDate', 'endDate'));
+    }
+    public function groupByMonth()
+    {
+        $expenses = Expense::with('category')
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month,  SUM(price) as total_price, COUNT(*) as count')
+            ->groupBy('month')
+            ->get();
+
+        return view('expenses.groupbydate', compact('expenses'));
+
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -104,7 +151,7 @@ class ExpenseController extends Controller
         $expense->update($validated);
         $notification = array(
             'message' => 'Expense updated successfully',
-            'alert-type' =>'success'
+            'alert-type' => 'success'
         );
         return redirect()->route('expenses.index')->with($notification);
     }
@@ -116,9 +163,10 @@ class ExpenseController extends Controller
     {
         $expense->delete();
         $notification = array(
-           'message' => 'Expense deleted successfully',
-            'alert-type' =>'success'
+            'message' => 'Expense deleted successfully',
+            'alert-type' => 'success'
         );
         return redirect()->route('expenses.index')->with($notification);
     }
+
 }
